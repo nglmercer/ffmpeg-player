@@ -36,7 +36,6 @@
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.27",
     "@types/node": "^24.0.3",
-    "@types/speaker": "^0.5.2", 
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   },
