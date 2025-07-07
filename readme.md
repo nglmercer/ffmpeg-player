@@ -1,4 +1,4 @@
-# mi-audio-player
+# ffmpeg-audio-player
 
 Una librería para reproducir audio en un backend de Node.js usando FFmpeg.
 
@@ -13,7 +13,7 @@ Una librería para reproducir audio en un backend de Node.js usando FFmpeg.
 ## Instalación
 
 ```sh
-npm install mi-audio-player
+npm install ffmpeg-audio-player
 ```
 
 Asegúrate de tener FFmpeg instalado (el paquete incluye binarios estáticos para la mayoría de plataformas).
@@ -21,7 +21,7 @@ Asegúrate de tener FFmpeg instalado (el paquete incluye binarios estáticos par
 ## Uso Básico
 
 ```ts
-import { Player, AudioQueue } from 'mi-audio-player';
+import { Player, AudioQueue } from 'ffmpeg-audio-player';
 
 const player = new Player(AudioQueue);
 
