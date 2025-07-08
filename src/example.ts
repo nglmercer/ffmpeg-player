@@ -8,12 +8,12 @@ const audioFolder = path.resolve(process.cwd(), 'audio_outputs');
 
 console.log(`Buscando audios en: ${audioFolder}`);
 
-const player = new Player(AudioQueue);
+const player = new Player(AudioQueue, {preferNativeFFmpeg: true});
 
 // ... (el resto de tus manejadores de eventos) ...
 
 function test() {
-  console.log('--- Node.js Audio Player (TypeScript) ---');
+  console.log('--- Node.js Audio Player (TypeScript) ---', player.getFFmpegInfo());
 
   AudioQueue.add(path.join(audioFolder, 'track1.mp3'));
   AudioQueue.add(path.join(audioFolder, 'track2.mp3'));
