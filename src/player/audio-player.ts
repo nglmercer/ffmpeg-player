@@ -1,7 +1,7 @@
 // src/audio-player.ts
 import fs from 'fs';
 import { EventEmitter } from 'events';
-import Speaker from 'speaker';
+import Speaker from '@mastra/node-speaker';
 import ffmpeg from 'fluent-ffmpeg';
 import { FFmpegDetector } from '../utils/ffmpeg-detector.js'; // Asegúrate de que la ruta sea correcta
 import { type IAudioQueue } from './audio-queue.js';
