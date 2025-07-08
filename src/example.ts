@@ -8,7 +8,7 @@ const audioFolder = path.resolve(process.cwd(), 'audio_outputs');
 
 console.log(`Buscando audios en: ${audioFolder}`);
 
-const player = new Player(AudioQueue, {preferNativeFFmpeg: true});
+const player = new Player(AudioQueue, {forceNativeFFmpeg: true});
 
 // ... (el resto de tus manejadores de eventos) ...
 
@@ -25,7 +25,7 @@ function test() {
 
   setTimeout(() => {
     console.log("\n--- DEMO: Pausing after 7 seconds ---");
-    player.pause();
+    player.stop();
   }, 7000);
 
   setTimeout(() => {
