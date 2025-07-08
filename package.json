@@ -1,6 +1,6 @@
 {
   "name": "ffmpeg-audio-player",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "type": "module",
   "description": "Una librería para reproducir audio en un backend de Node.js",
   "main": "./dist/index.js",
