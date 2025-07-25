@@ -1,91 +1,166 @@
 # ffmpeg-audio-player
 
-Una librería para reproducir audio en un backend de Node.js usando FFmpeg.
+A lightweight Node.js library that streams and plays audio files using FFmpeg under the hood.
 
-## Características
+> **Note:** This package is currently a thin wrapper around `fluent-ffmpeg` and `speaker`.  
+> Future releases may bundle pre-compiled FFmpeg binaries and add native pause/resume.
 
-- Reproducción de archivos de audio (MP3, WAV, etc.) en Node.js.
-- Cola de reproducción (playlist) gestionada en memoria.
-- Control de reproducción: play, stop, skip.
-- Eventos para seguimiento de progreso, inicio, fin y errores.
-- Basado en [fluent-ffmpeg](https://www.npmjs.com/package/fluent-ffmpeg) y [speaker](https://www.npmjs.com/package/speaker).
+---
 
-## Instalación
+## Features
 
-```sh
+- ✅ Play any audio format supported by FFmpeg (MP3, WAV, FLAC, AAC, OGG, …)  
+- ✅ In-memory playlist (queue) with FIFO order  
+- ✅ Simple play / stop / skip controls  
+- ✅ Progress & lifecycle events (`start`, `progress`, `end`, `queue-end`, `error`)  
+- ✅ Zero-config on most platforms (auto-detects FFmpeg and default audio backend)
+
+---
+
+## Installation
+
+```bash
 npm install ffmpeg-audio-player
 ```
 
-Asegúrate de tener FFmpeg instalado (el paquete incluye binarios estáticos para la mayoría de plataformas).
+### System Requirements
 
-## Uso Básico
+* Node.js ≥ 18  
+* FFmpeg binaries must be discoverable in `PATH`  
+  (macOS & most Linux distros: `brew install ffmpeg` or `apt install ffmpeg`)  
+  (Windows: download from [https://ffmpeg.org](https://ffmpeg.org) and add to `%PATH%`)
+
+---
+
+## Quick Start
 
 ```ts
 import { Player, AudioQueue } from 'ffmpeg-audio-player';
 
-const player = new Player(AudioQueue);
+const queue = new AudioQueue();
+const player = new Player(queue);
 
-AudioQueue.add('/ruta/a/mi_audio1.mp3');
-AudioQueue.add('/ruta/a/mi_audio2.mp3');
+// 1. Add tracks
+queue.add('./music/track1.mp3');
+queue.add('./music/track2.wav');
 
-player.play();
+// 2. Start playback
+await player.play();      // plays track1.mp3
 ```
 
-## API
+---
 
-### Player
+## API Reference
 
-- `play(filePath?: string): Promise<void>`  
-  Inicia la reproducción del archivo especificado o del siguiente en la cola.
+### `AudioQueue`
 
-- `pause(): void`  
-  Pausa la reproducción (equivalente a stop, por limitaciones técnicas).
+In-memory FIFO playlist.
 
-- `resume(): void`  
-  Reanuda la reproducción (no implementado, llama internamente a pause).
+| Method                         | Description                                      |
+| ------------------------------ | ------------------------------------------------ |
+| `add(filePath: string): void`  | Push a file to the end of the queue              |
+| `getNext(): string \| undefined` | Pop (and return) the next file path              |
+| `peek(): string \| undefined`  | Preview the next file without removing it        |
+| `list(): string[]`             | Current queue as an array                        |
+| `clear(): void`                | Empty the queue                                  |
 
-- `stop(): void`  
-  Detiene la reproducción actual.
+---
 
-- `skip(): void`  
-  Salta a la siguiente pista en la cola.
+### `Player`
 
-- `getCurrentProgress(): number`  
-  Devuelve el tiempo transcurrido en segundos.
+Event-emitter that plays files from an `AudioQueue`.
 
-- `hasTrack(): boolean`  
-  Indica si hay una pista cargada.
+#### Constructor
 
-- `destroy(): void`  
-  Limpia recursos y elimina listeners.
+```ts
+import { Player } from 'ffmpeg-audio-player';
+const player = new Player(queueInstance);
+```
 
-#### Eventos
+#### Methods
 
-- `'start'` — Cuando inicia una pista.
-- `'progress'` — Cada segundo, con el progreso.
-- `'end'` — Cuando termina una pista.
-- `'queue-end'` — Cuando la cola termina.
-- `'error'` — Si ocurre un error.
+| Signature                                   | Description                                                                 |
+| ------------------------------------------- | --------------------------------------------------------------------------- |
+| `play(filePath?: string): Promise<void>`    | Play the supplied path **or** the next item in the queue                    |
+| `pause(): void`                             | **Stops** the current track (pause is not yet supported)                    |
+| `resume(): void`                            | Alias for `pause()` (placeholder)                                           |
+| `stop(): void`                              | Immediately stop playback and flush the PCM stream                          |
+| `skip(): void`                              | Stop current track and start the next one from the queue                    |
+| `getCurrentProgress(): number`              | Seconds elapsed on the active track (`0` if idle)                           |
+| `hasTrack(): boolean`                       | `true` when a track is currently loaded                                     |
+| `destroy(): void`                           | Kill FFmpeg process, remove listeners, and free resources                   |
 
-### AudioQueue
+#### Events
 
-- `add(filePath: string): void`  
-  Agrega un archivo a la cola.
+| Event        | Payload                                           | Emitted when …                                  |
+| ------------ | ------------------------------------------------- | ----------------------------------------------- |
+| `start`      | `{ track: string }`                               | A new track starts                              |
+| `progress`   | `{ track: string, current: number, total: number }` | Every second while playing                      |
+| `end`        | `{ track: string }`                               | Current track finishes (naturally or skipped)   |
+| `queue-end`  | —                                                 | Last track in the queue finished                |
+| `error`      | `Error`                                           | FFmpeg or I/O error occurred                    |
 
-- `getNext(): string | undefined`  
-  Obtiene y elimina el siguiente archivo de la cola.
+Example usage with events:
 
-- `list(): string[]`  
-  Devuelve la lista actual de la cola.
+```ts
+player
+  .on('start', ({ track }) => console.log(`▶️  ${track}`))
+  .on('progress', ({ current, total }) =>
+    console.log(`⏳ ${current.toFixed(1)}s / ${total.toFixed(1)}s`)
+  )
+  .on('end', ({ track }) => console.log(`✅ ${track} finished`))
+  .on('queue-end', () => console.log('🎉 Playlist complete'))
+  .on('error', err => console.error('❌', err.message));
+```
 
-- `clear(): void`  
-  Limpia la cola.
+---
 
-## Ejemplo Completo
+## Advanced Example
 
-Consulta [src/example.ts](src/example.ts) para un ejemplo de uso interactivo.
+```ts
+import { Player, AudioQueue } from 'ffmpeg-audio-player';
 
-## Requisitos
+const playlist = new AudioQueue();
+const player   = new Player(playlist);
 
-- Node.js >= 18
-- FFmpeg (incluido vía dependencia)
+// Add some songs
+['a.mp3', 'b.wav', 'c.flac'].forEach(f => playlist.add(f));
+
+// Simple CLI controls
+process.stdin.setRawMode(true);
+process.stdin.on('data', chunk => {
+  switch (chunk.toString()) {
+    case ' ': player.pause(); break;
+    case 'n': player.skip();  break;
+    case 'q': process.exit(0);
+  }
+});
+
+await player.play();
+```
+
+---
+
+## FAQ / Troubleshooting
+
+| Issue | Fix |
+|-------|-----|
+| `Error: spawn ffmpeg ENOENT` | Ensure FFmpeg is installed and available in `PATH` (`ffmpeg -v` should work). |
+| No sound on Linux | Install ALSA headers: `sudo apt-get install libasound2-dev` then `npm rebuild`. |
+| Cannot pause/resume | True pause requires saving FFmpeg state; use `skip()` to jump tracks instead. |
+
+---
+
+## Roadmap
+
+- [ ] Native pause/resume via FFmpeg seek & offset caching  
+- [ ] Optional bundled FFmpeg binaries  
+- [ ] Gapless playback / cross-fade  
+- [ ] Volume & equalizer controls  
+- [ ] Web / Electron renderer
+
+---
+
+## License
+
+MIT © 2025 ffmpeg-audio-player contributors

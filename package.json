@@ -1,11 +1,16 @@
 {
   "name": "ffmpeg-audio-player",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "description": "Una librería para reproducir audio en un backend de Node.js",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+    "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nglmercer/ffmpeg-player.git"
+  },
+  "homepage": "https://github.com/nglmercer/ffmpeg-player#readme",
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -13,7 +18,9 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "readme.md",
+    "readme.es.md"
   ],
   "scripts": {
     "dev": "tsx watch ./src/example.ts",
