@@ -160,7 +160,7 @@ await player.play();
 - [ ] Web / Electron renderer
 
 ---
-
+### Documentation in spanish[here](https://github.com/nglmercer/ffmpeg-player/blob/main/readme.es.md)
 ## License
 
 MIT © 2025 ffmpeg-audio-player contributors
